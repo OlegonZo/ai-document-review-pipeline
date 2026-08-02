@@ -1,0 +1,12 @@
+services:
+  pipeline:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PIPELINE_DATABASE: /data/pipeline.sqlite3
+    volumes:
+      - pipeline_data:/data
+
+volumes:
+  pipeline_data:
