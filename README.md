@@ -31,6 +31,12 @@
 SQLite + audit log
 ```
 
+## API preview
+
+Swagger/OpenAPI интерфейс, сгенерированный при локальном запуске demo-проекта:
+
+![API documentation preview](assets/api-docs.png)
+
 ## Быстрый запуск
 
 ```powershell
