@@ -34,7 +34,7 @@ SQLite + audit log
 ## Быстрый запуск
 
 ```powershell
-cd portfolio_ai_document_pipeline
+cd ai-document-review-pipeline
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
