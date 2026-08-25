@@ -1,0 +1,33 @@
+services:
+  radar-widget:
+    build:
+      context: .
+      dockerfile: Dockerfile.radar
+    command: ["python", "-m", "reversal_radar", "serve", "--host", "0.0.0.0", "--port", "8100"]
+    ports:
+      - "8100:8100"
+    environment:
+      RADAR_COIN: ${RADAR_COIN:-HYPE}
+      RADAR_LEVEL: ${RADAR_LEVEL:-}
+      RADAR_DATABASE: /data/radar.sqlite3
+    volumes:
+      - radar_data:/data
+
+  radar-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.radar
+    command: ["python", "-m", "reversal_radar", "bot"]
+    environment:
+      RADAR_COIN: ${RADAR_COIN:-HYPE}
+      RADAR_LEVEL: ${RADAR_LEVEL:-}
+      RADAR_POLL_SECONDS: ${RADAR_POLL_SECONDS:-180}
+      RADAR_DATABASE: /data/radar.sqlite3
+      RADAR_TELEGRAM_TOKEN: ${RADAR_TELEGRAM_TOKEN:?нужен токен от @BotFather}
+      RADAR_TELEGRAM_CHAT_ID: ${RADAR_TELEGRAM_CHAT_ID:?нужен chat_id}
+    volumes:
+      - radar_data:/data
+    restart: unless-stopped
+
+volumes:
+  radar_data:

@@ -1,0 +1,48 @@
+{
+  "name": "Reversal Radar alerts (portfolio demo)",
+  "nodes": [
+    {
+      "parameters": {"path": "radar-alert", "httpMethod": "POST", "responseMode": "lastNode"},
+      "id": "webhook",
+      "name": "Radar alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {"value1": "={{ $json.body.text }}", "operation": "contains", "value2": "Разворот вниз"}
+          ]
+        }
+      },
+      "id": "confirmed-condition",
+      "name": "Сигналы совпали?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/botYOUR_TOKEN/sendMessage",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: 'YOUR_CHAT_ID', text: $json.body.text }) }}"
+      },
+      "id": "notify",
+      "name": "Отправить в Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 220]
+    }
+  ],
+  "connections": {
+    "Radar alert": {"main": [[{"node": "Сигналы совпали?", "type": "main", "index": 0}]]},
+    "Сигналы совпали?": {"main": [[{"node": "Отправить в Telegram", "type": "main", "index": 0}], []]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "portfolio-demo"
+}

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reversal Radar</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --line: #e3e6ea; --text: #14181d; --muted: #5c6773;
+    --up: #128a5b; --down: #c33a2e; --flat: #7b8794; --accent: #2f6feb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e1116; --panel:#161b22; --line:#252b33; --text:#e6edf3; --muted:#9aa6b2;
+            --up:#2ea36b; --down:#e05c4e; --flat:#7b8794; --accent:#5b8cff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:18px; background:var(--bg); color:var(--text);
+         font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 940px; margin: 0 auto; display: grid; gap: 14px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between; }
+  h1 { font-size:19px; margin:0; letter-spacing:.2px; }
+  .price { font-size:26px; font-weight:650; font-variant-numeric: tabular-nums; }
+  .state { font-weight:600; }
+  .state.up { color:var(--up); } .state.down { color:var(--down); } .state.flat { color:var(--flat); }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  input, select, button { font:inherit; color:var(--text); background:var(--bg);
+    border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
+  button { cursor:pointer; border-color:var(--accent); color:var(--accent); background:transparent; }
+  button:hover { background:rgba(127,127,127,.12); }
+  .gauge { position:relative; height:14px; border-radius:8px; margin:12px 0 6px;
+    background:linear-gradient(90deg, var(--down), var(--flat) 50%, var(--up)); opacity:.85; }
+  .needle { position:absolute; top:-5px; width:3px; height:24px; border-radius:2px; background:var(--text); }
+  .scale { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
+  .meta { display:flex; flex-wrap:wrap; gap:14px; color:var(--muted); font-size:13px; margin-top:8px; }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin:0 0 10px; }
+  ul { list-style:none; margin:0; padding:0; display:grid; gap:9px; }
+  li.signal { display:grid; grid-template-columns:20px 1fr auto; gap:10px; align-items:start;
+    padding-bottom:9px; border-bottom:1px dashed var(--line); }
+  li.signal:last-child { border-bottom:none; padding-bottom:0; }
+  .mark { font-weight:700; text-align:center; }
+  .mark.up { color:var(--up); } .mark.down { color:var(--down); } .mark.flat { color:var(--flat); }
+  .title { font-weight:600; }
+  .detail { color:var(--muted); }
+  .tf { color:var(--muted); font-size:12px; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:13px; }
+  .chip.up { border-color:var(--up); color:var(--up); } .chip.down { border-color:var(--down); color:var(--down); }
+  .plan { display:grid; gap:10px; }
+  .plan .row { border-left:3px solid var(--line); padding-left:10px; }
+  .plan .row.long { border-color:var(--up); } .plan .row.short { border-color:var(--down); }
+  .note, .warn { color:var(--muted); font-size:13px; }
+  .warn { color:var(--down); }
+  footer { color:var(--muted); font-size:12px; text-align:center; padding-bottom:8px; }
+  .error { color:var(--down); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <header>
+      <div>
+        <h1 id="coin">__COIN__</h1>
+        <div class="price" id="price">—</div>
+        <div class="state" id="state">загрузка…</div>
+      </div>
+      <div class="controls">
+        <label>Монета <input id="coinInput" size="6" value="__COIN__" /></label>
+        <label>Уровень <input id="levelInput" size="8" placeholder="авто" /></label>
+        <label>Обновлять
+          <select id="interval">
+            <option value="0">вручную</option>
+            <option value="30">30 с</option>
+            <option value="60" selected>1 мин</option>
+            <option value="300">5 мин</option>
+          </select>
+        </label>
+        <button id="refresh">Обновить</button>
+      </div>
+    </header>
+    <div class="gauge"><div class="needle" id="needle" style="left:50%"></div></div>
+    <div class="scale"><span>разворот вниз −100</span><span>0</span><span>+100 пробой вверх</span></div>
+    <div class="meta">
+      <span id="score">счёт: —</span>
+      <span id="coverage">данных: —</span>
+      <span id="alignment">таймфреймы: —</span>
+      <span id="updated">обновлено: —</span>
+    </div>
+    <div id="error" class="error"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Сигналы</h2>
+    <ul id="signals"></ul>
+  </div>
+
+  <div class="panel">
+    <h2>Таймфреймы</h2>
+    <div class="chips" id="frames"></div>
+  </div>
+
+  <div class="panel">
+    <h2>План на оба исхода</h2>
+    <div class="plan" id="plan"></div>
+  </div>
+
+  <div class="panel" id="warningsPanel" hidden>
+    <h2>Ограничения данных</h2>
+    <ul id="warnings"></ul>
+  </div>
+
+  <footer>__DISCLAIMER__</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const DIRECTION_CLASS = { up: "up", down: "down", neutral: "flat" };
+const DIRECTION_MARK = { up: "▲", down: "▼", neutral: "·" };
+let timer = null;
+
+function fmt(value, digits = 4) {
+  return value === null || value === undefined ? "—" : Number(value).toLocaleString("ru-RU", { maximumFractionDigits: digits });
+}
+
+async function load() {
+  const coin = $("coinInput").value.trim().toUpperCase() || "__COIN__";
+  const level = $("levelInput").value.trim().replace(",", ".");
+  const params = new URLSearchParams({ coin });
+  if (level) params.set("level", level);
+  try {
+    const response = await fetch(`/api/report?${params}`);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.detail || `HTTP ${response.status}`);
+    }
+    render(await response.json());
+    $("error").textContent = "";
+  } catch (error) {
+    $("error").textContent = `Не удалось получить данные: ${error.message}`;
+  }
+}
+
+function render(report) {
+  const sign = report.score > 5 ? "up" : report.score < -5 ? "down" : "flat";
+  $("coin").textContent = report.coin + (report.level ? ` · уровень ${fmt(report.level)}` : "");
+  $("price").textContent = fmt(report.price);
+  $("state").textContent = report.state_title;
+  $("state").className = "state " + sign;
+  $("needle").style.left = `calc(${(report.score + 100) / 2}% - 1.5px)`;
+  $("score").textContent = `счёт: ${report.score > 0 ? "+" : ""}${report.score}/100`;
+  $("coverage").textContent = `данных по сигналам: ${Math.round(report.coverage * 100)}%`;
+  $("alignment").textContent = `таймфреймов за сценарий: ${report.alignment}/${report.timeframes.length}`;
+  $("updated").textContent = `обновлено: ${new Date(report.generated_at).toLocaleTimeString("ru-RU")}`;
+
+  const signals = [...report.signals].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+  $("signals").innerHTML = signals.map((signal) => `
+    <li class="signal">
+      <span class="mark ${DIRECTION_CLASS[signal.direction]}">${DIRECTION_MARK[signal.direction]}</span>
+      <span><span class="title">${escape(signal.title)}</span><br /><span class="detail">${escape(signal.detail)}</span></span>
+      <span class="tf">${signal.timeframe ? escape(signal.timeframe) + " · " : ""}${signal.contribution > 0 ? "+" : ""}${signal.contribution}</span>
+    </li>`).join("");
+
+  $("frames").innerHTML = report.timeframes.map((view) => `
+    <span class="chip ${DIRECTION_CLASS[view.trend]}">${escape(view.timeframe)}: ${escape(view.trend)}${view.rsi !== null ? " · RSI " + view.rsi : ""}</span>
+  `).join("");
+
+  const plan = report.plan;
+  $("plan").innerHTML = `
+    <div class="row long"><b>Лонг.</b> ${escape(plan.long_trigger)}${plan.long_invalidation ? `<br /><span class="note">инвалидация ниже ${fmt(plan.long_invalidation)}</span>` : ""}</div>
+    <div class="row short"><b>Шорт.</b> ${escape(plan.short_trigger)}${plan.short_invalidation ? `<br /><span class="note">инвалидация выше ${fmt(plan.short_invalidation)}</span>` : ""}</div>
+    ${plan.notes.map((note) => `<div class="note">· ${escape(note)}</div>`).join("")}
+  `;
+
+  $("warningsPanel").hidden = report.warnings.length === 0;
+  $("warnings").innerHTML = report.warnings.map((warning) => `<li class="warn">${escape(warning)}</li>`).join("");
+}
+
+function escape(value) {
+  const node = document.createElement("div");
+  node.textContent = value ?? "";
+  return node.innerHTML;
+}
+
+function schedule() {
+  if (timer) clearInterval(timer);
+  const seconds = Number($("interval").value);
+  if (seconds > 0) timer = setInterval(load, seconds * 1000);
+}
+
+$("refresh").addEventListener("click", load);
+$("interval").addEventListener("change", schedule);
+for (const id of ["coinInput", "levelInput"]) {
+  $(id).addEventListener("keydown", (event) => { if (event.key === "Enter") load(); });
+}
+load();
+schedule();
+</script>
+</body>
+</html>

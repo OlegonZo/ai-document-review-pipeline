@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY reversal_radar ./reversal_radar
+RUN mkdir -p /data
+
+ENV RADAR_DATABASE=/data/radar.sqlite3 \
+    RADAR_COIN=HYPE \
+    PYTHONUNBUFFERED=1
+EXPOSE 8100
+
+# По умолчанию — наблюдение с алертами. Для виджета: command: ["python","-m","reversal_radar","serve","--host","0.0.0.0"]
+CMD ["python", "-m", "reversal_radar", "watch"]

@@ -73,6 +73,22 @@ py -m unittest discover -s tests -v
 
 Файл [workflows/document-review-webhook.json](workflows/document-review-webhook.json) можно импортировать в n8n. Он иллюстрирует передачу документа в API и развилку `ready/review`; URL и учётные данные намеренно не встроены.
 
+## Reversal Radar (отдельный модуль)
+
+В репозитории лежит второй самостоятельный инструмент — `reversal_radar/`: радар разворота по перп-контракту (по умолчанию HYPE на Hyperliquid). Он собирает свечи, funding, open interest и стакан, считает сигналы (реакция на уровень, объём, RSI-дивергенция, согласие таймфреймов) и выдаёт счёт от −100 до +100 вместе с планом на оба исхода и точками инвалидации.
+
+```powershell
+python -m reversal_radar --coin HYPE --level 83.40 report   # разовый отчёт
+python -m reversal_radar --coin HYPE watch --interval 180    # наблюдение с алертами
+python -m reversal_radar --coin HYPE bot                     # телеграм-бот
+python -m reversal_radar --coin HYPE serve --port 8100       # веб-виджет
+python -m reversal_radar --demo exhaustion --level 83.40 report  # демо без сети
+```
+
+Подробности, список сигналов, переменные окружения и Docker: [docs/reversal-radar.md](docs/reversal-radar.md).
+
+> Радар не предсказывает цену и не даёт торговых рекомендаций: он показывает, какой сценарий подтверждён наблюдаемыми данными, а какой — нет.
+
 ## Как развивать проект
 
 1. Заменить `DemoClassifier` на адаптер конкретного LLM с таймаутами и логированием версии модели.
