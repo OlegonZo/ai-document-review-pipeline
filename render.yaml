@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: reversal-radar-widget
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.radar
+    dockerContext: .
+    dockerCommand: python -m reversal_radar serve --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: RADAR_COIN
+        value: HYPE
+      - key: RADAR_LEVEL
+        value: ""
+      - key: RADAR_DATABASE
+        value: /data/radar.sqlite3
+      - key: PYTHONUNBUFFERED
+        value: "1"
