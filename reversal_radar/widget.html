@@ -4,122 +4,419 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Reversal Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f7f9; --panel: #ffffff; --line: #e3e6ea; --text: #14181d; --muted: #5c6773;
-    --up: #128a5b; --down: #c33a2e; --flat: #7b8794; --accent: #2f6feb;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#0e1116; --panel:#161b22; --line:#252b33; --text:#e6edf3; --muted:#9aa6b2;
-            --up:#2ea36b; --down:#e05c4e; --flat:#7b8794; --accent:#5b8cff; }
+    --void: #0a1116; --surface: #101b22; --surface-2: #14232c;
+    --line: #1f323d; --line-strong: #2c4451;
+    --text: #e8f1f2; --muted: #7d97a1; --dim: #4d6570;
+    --amber: #ffb454; --amber-dim: #8a6a3a;
+    --up: #4fd39a; --down: #ff6b5e; --flat: #5b7480;
+    --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    --body: "IBM Plex Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin:0; padding:18px; background:var(--bg); color:var(--text);
-         font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 940px; margin: 0 auto; display: grid; gap: 14px; }
-  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
-  header { display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; justify-content:space-between; }
-  h1 { font-size:19px; margin:0; letter-spacing:.2px; }
-  .price { font-size:26px; font-weight:650; font-variant-numeric: tabular-nums; }
-  .state { font-weight:600; }
-  .state.up { color:var(--up); } .state.down { color:var(--down); } .state.flat { color:var(--flat); }
-  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-  input, select, button { font:inherit; color:var(--text); background:var(--bg);
-    border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
-  button { cursor:pointer; border-color:var(--accent); color:var(--accent); background:transparent; }
-  button:hover { background:rgba(127,127,127,.12); }
-  .gauge { position:relative; height:14px; border-radius:8px; margin:12px 0 6px;
-    background:linear-gradient(90deg, var(--down), var(--flat) 50%, var(--up)); opacity:.85; }
-  .needle { position:absolute; top:-5px; width:3px; height:24px; border-radius:2px; background:var(--text); }
-  .scale { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
-  .meta { display:flex; flex-wrap:wrap; gap:14px; color:var(--muted); font-size:13px; margin-top:8px; }
-  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); margin:0 0 10px; }
-  ul { list-style:none; margin:0; padding:0; display:grid; gap:9px; }
-  li.signal { display:grid; grid-template-columns:20px 1fr auto; gap:10px; align-items:start;
-    padding-bottom:9px; border-bottom:1px dashed var(--line); }
-  li.signal:last-child { border-bottom:none; padding-bottom:0; }
-  .mark { font-weight:700; text-align:center; }
-  .mark.up { color:var(--up); } .mark.down { color:var(--down); } .mark.flat { color:var(--flat); }
-  .title { font-weight:600; }
-  .detail { color:var(--muted); }
-  .tf { color:var(--muted); font-size:12px; font-variant-numeric: tabular-nums; white-space:nowrap; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chip { border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:13px; }
-  .chip.up { border-color:var(--up); color:var(--up); } .chip.down { border-color:var(--down); color:var(--down); }
-  .plan { display:grid; gap:10px; }
-  .plan .row { border-left:3px solid var(--line); padding-left:10px; }
-  .plan .row.long { border-color:var(--up); } .plan .row.short { border-color:var(--down); }
-  .note, .warn { color:var(--muted); font-size:13px; }
-  .warn { color:var(--down); }
-  footer { color:var(--muted); font-size:12px; text-align:center; padding-bottom:8px; }
-  .error { color:var(--down); font-weight:600; }
+  html, body { background: var(--void); color: var(--text); margin: 0; }
+  body {
+    font-family: var(--body); font-size: 14px; line-height: 1.55;
+    padding: clamp(16px, 4vw, 40px);
+    background-image:
+      radial-gradient(circle at 18% -10%, rgba(255, 180, 84, 0.06), transparent 42%),
+      radial-gradient(circle at 100% 0%, rgba(79, 211, 154, 0.05), transparent 40%);
+  }
+  .console { max-width: 1080px; margin: 0 auto; display: grid; gap: 14px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim); margin: 0 0 10px; display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .eyebrow .count { color: var(--dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+
+  /* header / controls */
+  .masthead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 4px 4px; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand .mark { font-family: var(--mono); font-size: 12px; color: var(--amber); border: 1px solid var(--amber-dim); border-radius: 5px; padding: 2px 6px; letter-spacing: 0.08em; }
+  .brand h1 { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: 0.01em; margin: 0; color: var(--text); }
+  .brand .sub { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls label { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  input, select, button { font: inherit; color: var(--text); background: var(--void); border: 1px solid var(--line-strong); border-radius: 7px; padding: 6px 9px; }
+  input { width: 90px; font-family: var(--mono); font-size: 12px; }
+  button { cursor: pointer; border-color: var(--amber-dim); color: var(--amber); background: transparent; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  button:hover { background: var(--surface-2); }
+  input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .error { color: var(--down); font-family: var(--mono); font-size: 12px; padding: 0 4px; }
+
+  /* hero: verdict + gauge */
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 0; overflow: hidden; }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr; } .hero .readout { border-right: none; border-bottom: 1px solid var(--line); } }
+  .hero .readout { padding: 22px 26px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .coin-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .coin-row .coin { font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: 0.01em; }
+  .coin-row .price { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 17px; color: var(--muted); }
+  .level-tag { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.04em; }
+  .state-pill { display: inline-flex; align-items: center; gap: 7px; width: fit-content; padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: 13.5px; margin-top: 4px; }
+  .state-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .state-pill.up { background: rgba(79, 211, 154, 0.12); color: var(--up); } .state-pill.up .dot { background: var(--up); box-shadow: 0 0 8px rgba(79, 211, 154, 0.7); }
+  .state-pill.down { background: rgba(255, 107, 94, 0.12); color: var(--down); } .state-pill.down .dot { background: var(--down); box-shadow: 0 0 8px rgba(255, 107, 94, 0.7); }
+  .state-pill.flat { background: rgba(91, 116, 128, 0.16); color: var(--muted); } .state-pill.flat .dot { background: var(--flat); }
+  .meta-line { display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+  .meta-line b { color: var(--text); font-weight: 500; }
+  .gauge-wrap { padding: 14px 24px 18px; display: flex; flex-direction: column; align-items: center; }
+  .gauge-score { font-family: var(--display); font-size: 44px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; margin-top: -14px; }
+  .gauge-score .of100 { font-family: var(--mono); font-size: 14px; font-weight: 400; color: var(--dim); margin-left: 4px; }
+  .gauge-labels { display: flex; justify-content: space-between; width: 100%; max-width: 300px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); margin-top: -6px; }
+  .gauge-labels .lo { color: var(--down); } .gauge-labels .hi { color: var(--up); }
+  #needle { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); transform-origin: 150px 150px; }
+  @media (prefers-reduced-motion: reduce) { #needle { transition: none; } }
+
+  /* plain-language summary */
+  .tldr { display: grid; gap: 8px; }
+  .tldr .verdict { font-size: 14.5px; font-weight: 600; }
+  .tldr .line { font-size: 13px; color: var(--muted); display: flex; gap: 8px; }
+  .tldr .line .tag { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 5px; white-space: nowrap; height: fit-content; }
+  .tldr .line.for .tag { color: var(--up); border: 1px solid var(--up); }
+  .tldr .line.against .tag { color: var(--down); border: 1px solid var(--down); }
+  .tldr .line b { color: var(--text); font-weight: 600; }
+
+  /* grid body */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+  .grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+  .rail { display: grid; gap: 14px; }
+
+  .panel.up-side { border-top: 2px solid var(--up); }
+  .panel.down-side { border-top: 2px solid var(--down); }
+
+  /* signal feed */
+  .signal-list { list-style: none; margin: 0; padding: 0; display: grid; }
+  .signal { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: start; padding: 10px 2px; border-top: 1px solid var(--line); }
+  .signal:first-child { border-top: none; padding-top: 2px; }
+  .signal .mark { font-size: 12px; text-align: center; padding-top: 2px; }
+  .signal.up .mark { color: var(--up); } .signal.down .mark { color: var(--down); } .signal.flat .mark { color: var(--dim); }
+  .signal .title { font-weight: 600; font-size: 13px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .signal .tf { font-family: var(--mono); font-size: 9.5px; color: var(--dim); border: 1px solid var(--line-strong); border-radius: 4px; padding: 1px 5px; }
+  .signal .detail { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .contrib { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; padding-top: 3px; min-width: 56px; }
+  .contrib .num { font-family: var(--mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .contrib.up .num { color: var(--up); } .contrib.down .num { color: var(--down); }
+  .bar-track { width: 48px; height: 4px; background: var(--line); border-radius: 2px; position: relative; overflow: hidden; }
+  .bar-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+  .bar-track .fill.up { background: var(--up); left: 50%; } .bar-track .fill.down { background: var(--down); right: 50%; }
+  .empty-note { color: var(--dim); font-size: 12.5px; padding: 4px 2px; }
+
+  details.neutral-block { margin-top: 8px; }
+  details.neutral-block summary { cursor: pointer; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.04em; padding: 6px 2px; }
+  details.neutral-block summary:hover { color: var(--muted); }
+  details.neutral-block ul { margin-top: 6px; }
+  details.neutral-block .signal { grid-template-columns: 18px 1fr; }
+
+  /* timeframe chips */
+  .tf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tf-chip { border: 1px solid var(--line-strong); border-radius: 7px; padding: 9px 10px; display: flex; flex-direction: column; gap: 3px; }
+  .tf-chip .frame { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+  .tf-chip .trend { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 5px; }
+  .tf-chip.up .trend { color: var(--up); } .tf-chip.down .trend { color: var(--down); } .tf-chip.flat .trend { color: var(--dim); }
+  .tf-chip .rsi { font-family: var(--mono); font-size: 10.5px; color: var(--dim); }
+
+  /* plan */
+  .plan-row { border-left: 3px solid var(--line-strong); padding: 4px 0 4px 12px; margin-bottom: 12px; }
+  .plan-row:last-of-type { margin-bottom: 8px; }
+  .plan-row.long { border-color: var(--up); } .plan-row.short { border-color: var(--down); }
+  .plan-row .head { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .plan-row.long .head { color: var(--up); } .plan-row.short .head { color: var(--down); }
+  .plan-row .head .inv { font-family: var(--mono); color: var(--muted); text-transform: none; letter-spacing: 0; }
+  .plan-row .trigger { font-size: 12.5px; color: var(--text); }
+  .plan-notes { list-style: none; margin: 6px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 5px; }
+  .plan-notes li { font-size: 12px; color: var(--muted); padding-left: 12px; position: relative; }
+  .plan-notes li::before { content: "·"; position: absolute; left: 0; color: var(--dim); }
+
+  /* glossary */
+  .glossary { display: grid; gap: 10px; }
+  .glossary dt { font-weight: 600; font-size: 13px; color: var(--amber); }
+  .glossary dd { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+
+  .warnings { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; font-size: 12px; color: var(--amber); display: none; }
+  .warnings.show { display: block; }
+
+  footer { text-align: center; padding: 6px 10px 2px; color: var(--dim); font-size: 11.5px; max-width: 640px; margin: 0 auto; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="panel">
-    <header>
+<div class="console">
+
+  <div class="masthead">
+    <div class="brand">
+      <span class="mark">&#128225;</span>
       <div>
-        <h1 id="coin">__COIN__</h1>
-        <div class="price" id="price">—</div>
-        <div class="state" id="state">загрузка…</div>
+        <h1>Reversal Radar</h1>
+        <div class="sub">перп-контракт · разворот или продолжение</div>
       </div>
-      <div class="controls">
-        <label>Монета <input id="coinInput" size="6" value="__COIN__" /></label>
-        <label>Уровень <input id="levelInput" size="8" placeholder="авто" /></label>
-        <label>Обновлять
-          <select id="interval">
-            <option value="0">вручную</option>
-            <option value="30">30 с</option>
-            <option value="60" selected>1 мин</option>
-            <option value="300">5 мин</option>
-          </select>
-        </label>
-        <button id="refresh">Обновить</button>
-      </div>
-    </header>
-    <div class="gauge"><div class="needle" id="needle" style="left:50%"></div></div>
-    <div class="scale"><span>разворот вниз −100</span><span>0</span><span>+100 пробой вверх</span></div>
-    <div class="meta">
-      <span id="score">счёт: —</span>
-      <span id="coverage">данных: —</span>
-      <span id="alignment">таймфреймы: —</span>
-      <span id="updated">обновлено: —</span>
     </div>
-    <div id="error" class="error"></div>
+    <div class="controls">
+      <label>Монета <input id="coinInput" value="__COIN__" /></label>
+      <label>Уровень <input id="levelInput" placeholder="авто" /></label>
+      <label>Обновлять
+        <select id="interval">
+          <option value="0">вручную</option>
+          <option value="30">30 с</option>
+          <option value="60" selected>1 мин</option>
+          <option value="300">5 мин</option>
+        </select>
+      </label>
+      <button id="refresh">Обновить</button>
+    </div>
+  </div>
+  <div class="error" id="error"></div>
+
+  <div class="panel hero">
+    <div class="readout">
+      <div class="coin-row">
+        <span class="coin" id="coin">__COIN__</span>
+        <span class="price" id="price">—</span>
+      </div>
+      <div class="level-tag" id="levelTag">—</div>
+      <div class="state-pill" id="statePill"><span class="dot"></span><span id="stateTitle">загрузка…</span></div>
+      <div class="meta-line">
+        <span>данных по сигналам: <b id="coverage">—</b></span>
+        <span>таймфреймов за сценарий: <b id="alignment">—</b></span>
+        <span>обновлено: <b id="updated">—</b></span>
+      </div>
+    </div>
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 300 172" width="100%" style="max-width:300px" role="img" aria-label="Шкала счёта от минус 100 до плюс 100">
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ff6b5e"/><stop offset="50%" stop-color="#5b7480"/><stop offset="100%" stop-color="#4fd39a"/>
+          </linearGradient>
+        </defs>
+        <path d="M 20 150 A 130 130 0 0 1 280 150" fill="none" stroke="var(--line)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 20 150 A 130 130 0 0 1 280 150" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round" opacity="0.9"/>
+        <g id="ticks" font-family="IBM Plex Mono" font-size="9" fill="#4d6570"></g>
+        <line id="needle" x1="150" y1="150" x2="150" y2="32" stroke="#ffb454" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="150" cy="150" r="7" fill="#ffb454"/><circle cx="150" cy="150" r="3" fill="#0a1116"/>
+      </svg>
+      <div class="gauge-score"><span id="score">0</span><span class="of100">/100</span></div>
+      <div class="gauge-labels"><span class="lo">− разворот</span><span class="hi">продолжение +</span></div>
+    </div>
   </div>
 
   <div class="panel">
-    <h2>Сигналы</h2>
-    <ul id="signals"></ul>
+    <div class="eyebrow">Если коротко</div>
+    <div class="tldr" id="tldr"></div>
+  </div>
+
+  <div class="split">
+    <div class="panel up-side">
+      <div class="eyebrow">Тянет вверх <span class="count" id="upCount"></span></div>
+      <ul class="signal-list" id="upList"></ul>
+      <div class="empty-note" id="upEmpty" hidden>Ничего значимого не тянет вверх прямо сейчас.</div>
+    </div>
+    <div class="panel down-side">
+      <div class="eyebrow">Тянет вниз <span class="count" id="downCount"></span></div>
+      <ul class="signal-list" id="downList"></ul>
+      <div class="empty-note" id="downEmpty" hidden>Ничего значимого не тянет вниз прямо сейчас.</div>
+    </div>
   </div>
 
   <div class="panel">
-    <h2>Таймфреймы</h2>
-    <div class="chips" id="frames"></div>
+    <details class="neutral-block">
+      <summary id="neutralSummary">Проверено, но без перевеса</summary>
+      <ul class="signal-list" id="neutralList"></ul>
+    </details>
   </div>
 
-  <div class="panel">
-    <h2>План на оба исхода</h2>
-    <div class="plan" id="plan"></div>
+  <div class="grid">
+    <div class="panel">
+      <div class="eyebrow">Согласие таймфреймов</div>
+      <div class="tf-grid" id="tfGrid"></div>
+    </div>
+    <div class="rail">
+      <div class="panel">
+        <div class="eyebrow">План на оба исхода</div>
+        <div class="plan-row long">
+          <div class="head"><span>Лонг</span><span class="inv" id="longInv">—</span></div>
+          <div class="trigger" id="longTrigger">—</div>
+        </div>
+        <div class="plan-row short">
+          <div class="head"><span>Шорт</span><span class="inv" id="shortInv">—</span></div>
+          <div class="trigger" id="shortTrigger">—</div>
+        </div>
+        <ul class="plan-notes" id="planNotes"></ul>
+      </div>
+    </div>
   </div>
 
   <div class="panel" id="warningsPanel" hidden>
-    <h2>Ограничения данных</h2>
-    <ul id="warnings"></ul>
+    <div class="eyebrow">Ограничения данных</div>
+    <div class="warnings show" id="warnings"></div>
   </div>
 
-  <footer>__DISCLAIMER__</footer>
+  <div class="panel">
+    <details>
+      <summary style="cursor:pointer; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.04em;">Что означают термины</summary>
+      <dl class="glossary" style="margin-top:14px">
+        <dt>RSI</dt><dd>Индикатор силы движения от 0 до 100. Выше ~70 — рынок перекуплен, ниже ~30 — перепродан.</dd>
+        <dt>RSI-дивергенция</dt><dd>Цена и RSI расходятся: цена обновляет максимум (или минимум), а RSI — нет. Ранний намёк, что движение слабеет, даже если цена ещё растёт (или падает).</dd>
+        <dt>Funding</dt><dd>Плата, которую лонги и шорты платят друг другу на перп-контрактах каждый час. Сильный перекос в одну сторону — рынок перегружен этой стороной, топливо для резкого движения против неё.</dd>
+        <dt>Open Interest (OI)</dt><dd>Суммарный объём открытых позиций. Растёт вместе с ценой — в тренд заходят новые деньги. Растёт, а цена стоит — позиции копятся без движения, риск резких ликвидаций.</dd>
+        <dt>ATR</dt><dd>Средний размах свечи за период. Нужен, чтобы стоп-заявка стояла не внутри обычного шума рынка.</dd>
+        <dt>Стакан (order book)</dt><dd>Список заявок на покупку и продажу рядом с текущей ценой. Толщина заявок с одной стороны — реальное сопротивление или поддержка, а не просто линия на графике.</dd>
+        <dt>Таймфрейм</dt><dd>Масштаб графика: 15м, 1ч, 4ч, 1д. Разворот, видный только на 15-минутке, часто шум; тот же разворот на 4ч и 1д одновременно — куда весомее.</dd>
+        <dt>Инвалидация</dt><dd>Цена, при которой сценарий (лонг или шорт) считается ошибочным и его отменяют, а не держат из надежды.</dd>
+      </dl>
+    </details>
+  </div>
+
+  <footer id="disclaimer">__DISCLAIMER__</footer>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const DIRECTION_CLASS = { up: "up", down: "down", neutral: "flat" };
-const DIRECTION_MARK = { up: "▲", down: "▼", neutral: "·" };
+const DIR_CLASS = { up: "up", down: "down", neutral: "flat" };
+const DIR_MARK = { up: "&#9650;", down: "&#9660;", neutral: "&middot;" };
+const STATE_VERDICT = {
+  reversal_down: "Сигналы совпали в пользу разворота вниз — это подтверждённый сценарий, не намёк.",
+  weakening: "Перевес в сторону слабости, но без полного совпадения сигналов — предупреждение, не подтверждение.",
+  undecided: "Перевеса нет — сигналы почти уравновешивают друг друга.",
+  strengthening: "Перевес в сторону продолжения роста, но без полного совпадения сигналов.",
+  breakout_up: "Сигналы совпали в пользу продолжения роста — подтверждённый сценарий.",
+};
 let timer = null;
 
 function fmt(value, digits = 4) {
   return value === null || value === undefined ? "—" : Number(value).toLocaleString("ru-RU", { maximumFractionDigits: digits });
+}
+
+function escapeHtml(value) {
+  const node = document.createElement("div");
+  node.textContent = value ?? "";
+  return node.innerHTML;
+}
+
+function needlePoint(score, radius) {
+  const theta = Math.PI * (100 - score) / 200;
+  return { x: 150 + radius * Math.cos(theta), y: 150 - radius * Math.sin(theta) };
+}
+
+function buildTicks() {
+  const g = $("ticks");
+  if (g.childElementCount) return;
+  [-100, -50, 0, 50, 100].forEach((value) => {
+    const { x, y } = needlePoint(value, 148);
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    el.setAttribute("x", x); el.setAttribute("y", y); el.setAttribute("text-anchor", "middle");
+    el.textContent = value > 0 ? "+" + value : String(value);
+    g.appendChild(el);
+  });
+}
+
+function setNeedle(score) {
+  const theta = Math.PI * (100 - score) / 200;
+  const degrees = (theta * 180 / Math.PI) - 90;
+  $("needle").style.transform = `rotate(${degrees}deg)`;
+}
+
+function signalRow(s, compact) {
+  const cls = DIR_CLASS[s.direction];
+  const magnitude = Math.min(100, Math.abs(s.contribution) / 2.4 * 100);
+  const fill = s.direction === "up" ? `<span class="fill up" style="width:${magnitude / 2}%"></span>`
+    : s.direction === "down" ? `<span class="fill down" style="width:${magnitude / 2}%"></span>` : "";
+  const contrib = s.contribution === 0 ? "" : `
+      <span class="contrib ${cls}">
+        <span class="num">${s.contribution > 0 ? "+" : ""}${s.contribution.toFixed(2)}</span>
+        <span class="bar-track">${fill}</span>
+      </span>`;
+  return `
+    <li class="signal ${cls}">
+      <span class="mark">${DIR_MARK[s.direction]}</span>
+      <span>
+        <span class="title">${escapeHtml(s.title)}${s.timeframe ? `<span class="tf">${escapeHtml(s.timeframe)}</span>` : ""}</span>
+        <span class="detail">${escapeHtml(s.detail)}</span>
+      </span>
+      ${contrib}
+    </li>`;
+}
+
+function buildTldr(report) {
+  const active = [...report.signals].filter((s) => s.contribution !== 0);
+  const up = active.filter((s) => s.direction === "up").sort((a, b) => b.contribution - a.contribution);
+  const down = active.filter((s) => s.direction === "down").sort((a, b) => a.contribution - b.contribution);
+  const verdict = STATE_VERDICT[report.state] || report.state_title;
+
+  let html = `<div class="verdict">${escapeHtml(verdict)}</div>`;
+  if (up[0]) {
+    html += `<div class="line for"><span class="tag">за рост</span><span><b>${escapeHtml(up[0].title)}</b> — ${escapeHtml(up[0].detail)}</span></div>`;
+  }
+  if (down[0]) {
+    html += `<div class="line against"><span class="tag">против</span><span><b>${escapeHtml(down[0].title)}</b> — ${escapeHtml(down[0].detail)}</span></div>`;
+  }
+  if (!up[0] && !down[0]) {
+    html += `<div class="line"><span>Ни один сигнал не набрал веса — данных мало или рынок совсем спокоен. Смотрите план ниже.</span></div>`;
+  }
+  $("tldr").innerHTML = html;
+}
+
+function render(report) {
+  const sign = report.score > 5 ? "up" : report.score < -5 ? "down" : "flat";
+  $("coin").textContent = report.coin;
+  $("price").textContent = fmt(report.price);
+  $("levelTag").textContent = report.level ? `уровень анализа ${fmt(report.level)}` : "уровень: авто";
+
+  const pill = $("statePill");
+  pill.className = "state-pill " + sign;
+  $("stateTitle").textContent = report.state_title;
+
+  $("coverage").textContent = Math.round(report.coverage * 100) + "%";
+  $("alignment").textContent = `${report.alignment}/${report.timeframes.length}`;
+  $("updated").textContent = new Date(report.generated_at).toLocaleTimeString("ru-RU");
+
+  $("score").textContent = (report.score > 0 ? "+" : "") + Math.round(report.score);
+  setNeedle(Math.max(-100, Math.min(100, report.score)));
+
+  buildTldr(report);
+
+  const up = report.signals.filter((s) => s.direction === "up" && s.contribution !== 0).sort((a, b) => b.contribution - a.contribution);
+  const down = report.signals.filter((s) => s.direction === "down" && s.contribution !== 0).sort((a, b) => a.contribution - b.contribution);
+  const neutral = report.signals.filter((s) => s.contribution === 0);
+
+  $("upList").innerHTML = up.map((s) => signalRow(s)).join("");
+  $("upEmpty").hidden = up.length > 0;
+  $("upCount").textContent = up.length ? `(${up.length})` : "";
+
+  $("downList").innerHTML = down.map((s) => signalRow(s)).join("");
+  $("downEmpty").hidden = down.length > 0;
+  $("downCount").textContent = down.length ? `(${down.length})` : "";
+
+  $("neutralList").innerHTML = neutral.map((s) => signalRow(s, true)).join("");
+  $("neutralSummary").textContent = `Проверено, но без перевеса (${neutral.length})`;
+
+  $("tfGrid").innerHTML = report.timeframes.map((v) => `
+    <div class="tf-chip ${DIR_CLASS[v.trend]}">
+      <div class="frame"><span>${escapeHtml(v.timeframe)}</span><span class="rsi">RSI ${v.rsi ?? "—"}</span></div>
+      <div class="trend">${DIR_MARK[v.trend]} ${escapeHtml(v.trend)}</div>
+    </div>`).join("");
+
+  $("longTrigger").textContent = report.plan.long_trigger;
+  $("longInv").textContent = report.plan.long_invalidation ? `< ${fmt(report.plan.long_invalidation)}` : "—";
+  $("shortTrigger").textContent = report.plan.short_trigger;
+  $("shortInv").textContent = report.plan.short_invalidation ? `> ${fmt(report.plan.short_invalidation)}` : "—";
+  $("planNotes").innerHTML = report.plan.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join("");
+
+  const warn = $("warnings");
+  const panel = $("warningsPanel");
+  if (report.warnings && report.warnings.length) {
+    warn.innerHTML = report.warnings.map((w) => `! ${escapeHtml(w)}`).join("<br>");
+    panel.hidden = false;
+  } else {
+    panel.hidden = true;
+  }
+
+  $("disclaimer").textContent = report.disclaimer;
 }
 
 async function load() {
@@ -140,47 +437,6 @@ async function load() {
   }
 }
 
-function render(report) {
-  const sign = report.score > 5 ? "up" : report.score < -5 ? "down" : "flat";
-  $("coin").textContent = report.coin + (report.level ? ` · уровень ${fmt(report.level)}` : "");
-  $("price").textContent = fmt(report.price);
-  $("state").textContent = report.state_title;
-  $("state").className = "state " + sign;
-  $("needle").style.left = `calc(${(report.score + 100) / 2}% - 1.5px)`;
-  $("score").textContent = `счёт: ${report.score > 0 ? "+" : ""}${report.score}/100`;
-  $("coverage").textContent = `данных по сигналам: ${Math.round(report.coverage * 100)}%`;
-  $("alignment").textContent = `таймфреймов за сценарий: ${report.alignment}/${report.timeframes.length}`;
-  $("updated").textContent = `обновлено: ${new Date(report.generated_at).toLocaleTimeString("ru-RU")}`;
-
-  const signals = [...report.signals].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
-  $("signals").innerHTML = signals.map((signal) => `
-    <li class="signal">
-      <span class="mark ${DIRECTION_CLASS[signal.direction]}">${DIRECTION_MARK[signal.direction]}</span>
-      <span><span class="title">${escape(signal.title)}</span><br /><span class="detail">${escape(signal.detail)}</span></span>
-      <span class="tf">${signal.timeframe ? escape(signal.timeframe) + " · " : ""}${signal.contribution > 0 ? "+" : ""}${signal.contribution}</span>
-    </li>`).join("");
-
-  $("frames").innerHTML = report.timeframes.map((view) => `
-    <span class="chip ${DIRECTION_CLASS[view.trend]}">${escape(view.timeframe)}: ${escape(view.trend)}${view.rsi !== null ? " · RSI " + view.rsi : ""}</span>
-  `).join("");
-
-  const plan = report.plan;
-  $("plan").innerHTML = `
-    <div class="row long"><b>Лонг.</b> ${escape(plan.long_trigger)}${plan.long_invalidation ? `<br /><span class="note">инвалидация ниже ${fmt(plan.long_invalidation)}</span>` : ""}</div>
-    <div class="row short"><b>Шорт.</b> ${escape(plan.short_trigger)}${plan.short_invalidation ? `<br /><span class="note">инвалидация выше ${fmt(plan.short_invalidation)}</span>` : ""}</div>
-    ${plan.notes.map((note) => `<div class="note">· ${escape(note)}</div>`).join("")}
-  `;
-
-  $("warningsPanel").hidden = report.warnings.length === 0;
-  $("warnings").innerHTML = report.warnings.map((warning) => `<li class="warn">${escape(warning)}</li>`).join("");
-}
-
-function escape(value) {
-  const node = document.createElement("div");
-  node.textContent = value ?? "";
-  return node.innerHTML;
-}
-
 function schedule() {
   if (timer) clearInterval(timer);
   const seconds = Number($("interval").value);
@@ -192,6 +448,8 @@ $("interval").addEventListener("change", schedule);
 for (const id of ["coinInput", "levelInput"]) {
   $(id).addEventListener("keydown", (event) => { if (event.key === "Enter") load(); });
 }
+
+buildTicks();
 load();
 schedule();
 </script>
